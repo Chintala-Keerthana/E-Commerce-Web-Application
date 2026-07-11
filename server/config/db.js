@@ -14,6 +14,7 @@ const pool = mysql.createPool({
     rejectUnauthorized: true,
   },
 });
+console.log("DB NAME:", process.env.DB_NAME);  
 
 pool.getConnection((err, connection) => {
   if (err) {
