@@ -121,7 +121,60 @@ const login = (req, res) => {
   });
 };
 
+// @desc    Forgot password / reset password
+// @route   POST /api/auth/forgot-password
+// @access  Public
+const forgotPassword = (req, res) => {
+  const { email, newPassword, confirmNewPassword } = req.body;
+
+  // Validate inputs
+  if (!email || !newPassword || !confirmNewPassword) {
+    return res.status(400).json({ message: "Please fill in all fields" });
+  }
+
+  if (newPassword !== confirmNewPassword) {
+    return res.status(400).json({ message: "Passwords do not match" });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ message: "Password must be at least 6 characters long" });
+  }
+
+  // Find user by email
+  User.findUserByEmail(email, (err, results) => {
+    if (err) {
+      console.error("Database error during forgot password check:", err);
+      return res.status(500).json({ message: "Server error checking user existence" });
+    }
+
+    if (results.length === 0) {
+      return res.status(400).json({ message: "User with this email does not exist" });
+    }
+
+    // Hash the password
+    bcrypt.hash(newPassword, 10, (hashErr, hashedPassword) => {
+      if (hashErr) {
+        console.error("Bcrypt hashing error during password reset:", hashErr);
+        return res.status(500).json({ message: "Server error resetting password" });
+      }
+
+      // Update password in database
+      User.updatePassword(email, hashedPassword, (updateErr, updateResult) => {
+        if (updateErr) {
+          console.error("Database error during password update:", updateErr);
+          return res.status(500).json({ message: "Server error updating password" });
+        }
+
+        res.status(200).json({
+          message: "Password reset successful. You can now login with your new password.",
+        });
+      });
+    });
+  });
+};
+
 module.exports = {
   register,
   login,
+  forgotPassword,
 };

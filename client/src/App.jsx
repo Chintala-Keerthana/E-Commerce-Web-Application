@@ -13,6 +13,7 @@ import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
 import ProductList from "./pages/ProductList";
 import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
@@ -78,6 +79,7 @@ function App() {
                     <Route path="/" element={<Home />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/shop" element={<ProductList />} />
                     <Route path="/product/:id" element={<ProductDetails />} />
 

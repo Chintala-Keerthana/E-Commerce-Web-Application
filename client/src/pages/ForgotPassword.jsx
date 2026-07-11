@@ -1,42 +1,56 @@
 import React, { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
+import api from "../services/api";
 import { useToast } from "../context/ToastContext";
-import { LogIn, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { KeyRound, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
-const Login = () => {
+const ForgotPassword = () => {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const { login } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  // Redirect to redirect path or home
-  const from = location.state?.from?.pathname || "/";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    
-    if (!email || !password) {
+
+    // Validation checks
+    if (!email || !newPassword || !confirmNewPassword) {
       setError("Please fill in all fields.");
       return;
     }
 
-    setIsSubmitting(true);
-    const result = await login(email, password);
-    setIsSubmitting(false);
+    if (newPassword.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
 
-    if (result.success) {
-      addToast("Welcome back! Login successful.", "success");
-      navigate(from, { replace: true });
-    } else {
-      setError(result.message);
+    if (newPassword !== confirmNewPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await api.post("/auth/forgot-password", {
+        email,
+        newPassword,
+        confirmNewPassword,
+      });
+
+      setIsSubmitting(false);
+      addToast(response.data.message || "Password reset successfully!", "success");
+      navigate("/login");
+    } catch (err) {
+      setIsSubmitting(false);
+      const message = err.response?.data?.message || "Failed to reset password. Please try again.";
+      setError(message);
     }
   };
 
@@ -44,10 +58,10 @@ const Login = () => {
     <div className="auth-container animate-fade-in">
       <div className="auth-card">
         <div className="flex-center" style={{ marginBottom: "16px", color: "var(--primary)" }}>
-          <LogIn size={40} />
+          <KeyRound size={40} />
         </div>
-        <h2 className="auth-title">Welcome Back</h2>
-        <p className="auth-subtitle">Login to access your cart, wishlist, and orders</p>
+        <h2 className="auth-title">Reset Password</h2>
+        <p className="auth-subtitle">Enter your email and choose a new password</p>
 
         {error && (
           <div className="alert alert-danger" role="alert">
@@ -85,8 +99,8 @@ const Login = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="password">
-              Password
+            <label className="form-label" htmlFor="newPassword">
+              New Password
             </label>
             <div style={{ position: "relative" }}>
               <Lock
@@ -100,12 +114,12 @@ const Login = () => {
                 }}
               />
               <input
-                id="password"
+                id="newPassword"
                 type={showPassword ? "text" : "password"}
                 className="form-input"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Min. 6 characters"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
                 style={{ paddingLeft: "42px", paddingRight: "44px" }}
                 required
               />
@@ -130,20 +144,53 @@ const Login = () => {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "4px" }}>
-              <Link
-                to="/forgot-password"
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="confirmNewPassword">
+              Confirm New Password
+            </label>
+            <div style={{ position: "relative" }}>
+              <Lock
+                size={18}
                 style={{
-                  fontSize: "13px",
-                  color: "var(--primary)",
-                  fontWeight: "600",
-                  textDecoration: "none",
+                  position: "absolute",
+                  left: "14px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "var(--text-muted)",
                 }}
-                onMouseEnter={(e) => (e.target.style.textDecoration = "underline")}
-                onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
+              />
+              <input
+                id="confirmNewPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                className="form-input"
+                placeholder="Repeat password"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                style={{ paddingLeft: "42px", paddingRight: "44px" }}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={{
+                  position: "absolute",
+                  right: "14px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--text-muted)",
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "0",
+                }}
+                aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
               >
-                Forgot Password?
-              </Link>
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
 
@@ -153,16 +200,20 @@ const Login = () => {
             style={{ width: "100%", marginTop: "10px" }}
             disabled={isSubmitting}
           >
-            {isSubmitting ? <div className="spinner" style={{ width: "18px", height: "18px", borderWidth: "2px" }} /> : "Sign In"}
+            {isSubmitting ? (
+              <div className="spinner" style={{ width: "18px", height: "18px", borderWidth: "2px" }} />
+            ) : (
+              "Reset Password"
+            )}
           </button>
         </form>
 
         <p className="auth-redirect">
-          Don't have an account? <Link to="/register">Sign up</Link>
+          Remember your password? <Link to="/login">Sign in</Link>
         </p>
       </div>
     </div>
   );
 };
 
-export default Login;
+export default ForgotPassword;
