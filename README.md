@@ -172,8 +172,9 @@ E-Commerce-Web-Application
 # 👩‍💻 Author
 
 **Keerthana Chintala**
+Full Stack Developer
 
-Computer Science Engineering Student
+GitHub: https://github.com/Chintala-Keerthana
 
 ---
 
@@ -185,5 +186,8 @@ Computer Science Engineering Student
 * Production deployment using Vercel, Render, and TiDB Cloud.
 * Responsive and user-friendly shopping experience.
 
-```
-```
+---
+
+## ⭐ Support
+
+If you find this project useful, consider giving it a ⭐ on GitHub.
