@@ -11,7 +11,7 @@ const pool = mysql.createPool({
   ssl: {
     ca: fs.readFileSync(path.join(__dirname, "ca.pem")),
     minVersion: "TLSv1.2",
-    rejectUnauthorized: true,
+    rejectUnauthorized: false,
   },
 });
 console.log("DB NAME:", process.env.DB_NAME);  

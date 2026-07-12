@@ -1,5 +1,6 @@
 const mysql = require("mysql2/promise");
 const path = require("path");
+const fs = require("fs");
 const bcrypt = require("bcryptjs");
 require("dotenv").config({ path: path.join(__dirname, "../.env") });
 
@@ -176,12 +177,24 @@ const products = [
 ];
 
 async function seed() {
-  const connection = await mysql.createConnection({
-    host: process.env.DB_HOST || "localhost",
-    user: process.env.DB_USER || "root",
-    password: process.env.DB_PASSWORD || "Keerthi@123",
-    database: process.env.DB_NAME || "ecommerce_db",
-  });
+  const connectionConfig = {
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT || 3306,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+  };
+
+  const caPath = path.join(__dirname, "../config/ca.pem");
+  if (fs.existsSync(caPath)) {
+    connectionConfig.ssl = {
+      ca: fs.readFileSync(caPath),
+      minVersion: "TLSv1.2",
+      rejectUnauthorized: false,
+    };
+  }
+
+  const connection = await mysql.createConnection(connectionConfig);
 
   console.log("🔌 Connected to database for seeding...");
 
